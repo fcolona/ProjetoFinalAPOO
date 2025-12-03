@@ -116,9 +116,9 @@ Pós-Condições: Um gatilho de envio de email é criado associado aquela tarefa
 Cenário de Sucesso Principal:
 1. O usuário seleciona uma tarefa.
 
-2. O usuário seleciona a opção "Definir Lembrete".
+2. O usuário seleciona a opção "Criar Lembrete".
 
-3. O sistema solicita informações de data hora para disparo do lembrete.
+3. O sistema solicita informações de data do prazo de entrega e quantas horas antes o lembrete deve ser disparado.
 
 4. O usuário fornece as informações.
 

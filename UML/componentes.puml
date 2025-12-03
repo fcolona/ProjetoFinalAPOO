@@ -1,4 +1,4 @@
-@startuml "Componentes"
+@startuml "Diagrama de Componentes"
 left to right direction
 ' -- Definição dos Elementos --
 

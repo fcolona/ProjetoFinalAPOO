@@ -1,0 +1,46 @@
+@startuml "Diagrama de Classes - Componente de Tarefa"
+
+enum Status {
+    PENDENTE
+    EM_ANDAMENTO
+    CONCLUIDO
+}
+
+enum Tipo {
+    PROVA
+    TRABALHO
+    ATIVIDADE
+}
+
+class Tarefa {
+    -String titulo
+    -String descricao
+    -Date dataEntrega
+    -Optional<Int> nota
+
+    +getTitulo()
+    +getDescricao()
+    +getDataEntrega()
+    +getNota()
+    +setTitulo()
+    +setDescricao()
+    +setDataEntrega()
+    +setNota()
+    +atualizarStatus(status)
+}
+
+class Lembrete {
+    -Date data
+    -boolean foiDisparado
+
+    +getData()
+    +getFoiDisparado()
+    +setData(data)
+    +marcarComoDisparado()
+}
+
+Tarefa "0..*" -> "1" Status
+Tipo "1" <- "0..*" Tarefa
+Tarefa "1" *-- "0..*" Lembrete
+
+@enduml
