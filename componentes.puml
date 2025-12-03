@@ -14,11 +14,7 @@ package "Camada de Negócio" {
     [Componente de Tarefa] as comp_task
     [Componente de Frequência] as comp_freq
     [Componente de Relatório] as comp_dashboard
-}
-
-package "Serviços Transversais" {
     [Componente de Envio de Email] as comp_email
-    [Componente de Autenticação e Segurança] as comp_auth
 }
 
 package "Camada de Persistência" {
@@ -38,10 +34,9 @@ database "Banco de Dados" {
 ' -- Relações --
 
 ' 1. Usuário interage com a interface
-user ..> comp_interface : interage
+user ..> comp_interface : <<use>>
 
 ' 2. Interface chama os controladores de negócio
-comp_interface ..> comp_auth : <<use>>
 comp_interface ..> comp_user : <<use>>
 comp_interface ..> comp_disc : <<use>>
 comp_interface ..> comp_task : <<use>>
@@ -54,7 +49,7 @@ comp_task ..> comp_disc : <<use>>
 ' A frequência é registrada dentro de uma disciplina
 comp_freq ..> comp_disc : <<use>>
 
-' 4. Dashboard agrega dados
+' 4. Relatório agrega dados
 comp_dashboard ..> comp_disc : <<use>>
 comp_dashboard ..> comp_task : <<use>>
 comp_dashboard ..> comp_freq : <<use>>
@@ -62,7 +57,6 @@ comp_dashboard ..> comp_freq : <<use>>
 ' 5. Serviços Transversais
 comp_user ..> comp_email : <<use>>
 comp_freq ..> comp_email : <<use>>
-comp_user ..> comp_auth : <<use>>
 
 ' 6. Conexão Negócio -> Persistência
 comp_user ..> access_user : <<use>>
