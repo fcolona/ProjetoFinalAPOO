@@ -1,0 +1,73 @@
+@startuml "Projeto Final Refinado"
+left to right direction
+
+actor :Usuário: as gen
+actor :Usuário Não Autenticado: as anom
+actor :Usuário Autenticado: as user
+
+gen <|-- anom
+gen <|-- user
+
+package "Componente de Cadastro e Autenticação" {
+    usecase "Cadastrar Usuário" as uc_registration
+    usecase "Realizar Login" as uc_login
+    usecase "Realizar Logout" as uc_logout
+    usecase "Recuperar Senha" as uc_forgot_pass
+}
+anom -- uc_registration
+anom -- uc_login
+anom -- uc_forgot_pass
+user -- uc_logout
+
+
+package "Componente de Tarefas e Atividades" {
+    usecase "Visualizar Notas" as uc_view_grades
+
+    usecase "Gerenciar Disciplinas" as uc_disc
+    usecase "Associar Tarefa" as uc_association
+    
+    usecase "Gerenciar Tarefas" as uc_task
+    usecase "Registrar/Editar Lembrete" as uc_reminder
+    usecase "Registrar/Editar Nota" as uc_grade
+    usecase "Concluir Tarefa" as uc_done
+    
+    uc_task <.. uc_reminder : <<extends>>
+    uc_task <.. uc_grade : <<extends>>
+    uc_task <.. uc_done : <<extends>>
+    uc_disc <.. uc_association : <<extends>>
+}
+user -- uc_disc
+user -- uc_task
+user -- uc_view_grades
+
+
+package "Componente de Controle de Frequência" {
+    usecase "Gerenciar Registros de Frequência" as uc_freq
+    usecase "Configurar Parâmetros de Frequência" as uc_config_freq
+    usecase "Registrar/Editar Número Total de Aulas" as uc_classes
+    usecase "Registrar/Editar Limite de Faltas" as uc_freq_limit
+    usecase "Visualizar Relatório de Frequência" as uc_freq_dashboard
+
+    uc_config_freq <.. uc_classes : <<extends>>
+    uc_config_freq <.. uc_freq_limit : <<extends>>
+}
+user -- uc_freq
+user -- uc_freq_dashboard
+user -- uc_config_freq
+
+
+package "Componente de Dashboards" {
+    usecase "Visualizar Dashboard de Tarefas" as uc_view_tasks
+    usecase "Filtrar  Tarefas" as uc_filter_tasks
+    usecase "Ordenar Tarefas" as uc_order_tasks
+    usecase "Visualizar Dashboard da Disciplina" as uc_view_disc
+    usecase "Visualizar Dashboard do Semestre" as uc_view_semester
+
+    uc_view_tasks <.. uc_filter_tasks : <<extends>>
+    uc_view_tasks <.. uc_order_tasks : <<extends>>
+}
+user -- uc_view_tasks
+user -- uc_view_disc
+user -- uc_view_semester
+
+@enduml

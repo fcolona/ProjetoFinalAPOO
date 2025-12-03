@@ -1,0 +1,78 @@
+@startuml "Componentes"
+left to right direction
+' -- Definição dos Elementos --
+
+actor :Usuário Autenticado: as user
+
+package "Camada de Apresentação" {
+    [Componente de Interface de Usuário] as comp_interface
+}
+
+package "Camada de Negócio" {
+    [Componente de Usuário] as comp_user
+    [Componente de Disciplina] as comp_disc
+    [Componente de Tarefa] as comp_task
+    [Componente de Frequência] as comp_freq
+    [Componente de Relatório] as comp_dashboard
+}
+
+package "Serviços Transversais" {
+    [Componente de Envio de Email] as comp_email
+    [Componente de Autenticação e Segurança] as comp_auth
+}
+
+package "Camada de Persistência" {
+    [Componente de Acesso a DB de Usuário] as access_user
+    [Componente de Acesso a DB de Disciplina] as access_disc
+    [Componente de Acesso a DB de Tarefa] as access_task
+    [Componente de Acesso a DB de Faltas] as access_freq
+}
+
+database "Banco de Dados" {
+    [DB Usuários]
+    [DB Disciplinas]
+    [DB Tarefas]
+    [DB Faltas]
+}
+
+' -- Relações --
+
+' 1. Usuário interage com a interface
+user ..> comp_interface : interage
+
+' 2. Interface chama os controladores de negócio
+comp_interface ..> comp_auth : <<use>>
+comp_interface ..> comp_user : <<use>>
+comp_interface ..> comp_disc : <<use>>
+comp_interface ..> comp_task : <<use>>
+comp_interface ..> comp_freq : <<use>>
+comp_interface ..> comp_dashboard : <<use>>
+
+' 3. Dependências entre Componentes de Negócio
+' Uma tarefa precisa estar vinculada a uma disciplina
+comp_task ..> comp_disc : <<use>>
+' A frequência é registrada dentro de uma disciplina
+comp_freq ..> comp_disc : <<use>>
+
+' 4. Dashboard agrega dados
+comp_dashboard ..> comp_disc : <<use>>
+comp_dashboard ..> comp_task : <<use>>
+comp_dashboard ..> comp_freq : <<use>>
+
+' 5. Serviços Transversais
+comp_user ..> comp_email : <<use>>
+comp_freq ..> comp_email : <<use>>
+comp_user ..> comp_auth : <<use>>
+
+' 6. Conexão Negócio -> Persistência
+comp_user ..> access_user : <<use>>
+comp_disc ..> access_disc : <<use>>
+comp_task ..> access_task : <<use>>
+comp_freq ..> access_freq : <<use>>
+
+' 7. Conexão Persistência -> Banco de Dados
+access_user ..> [DB Usuários] : <<use>>
+access_disc ..> [DB Disciplinas] : <<use>>
+access_task ..> [DB Tarefas] : <<use>>
+access_freq ..> [DB Faltas] : <<use>>
+@enduml
