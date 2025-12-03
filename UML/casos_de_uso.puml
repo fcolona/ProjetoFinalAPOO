@@ -1,12 +1,8 @@
-@startuml "Projeto Final Refinado"
+@startuml "Projeto Final"
 left to right direction
 
-actor :Usuário: as gen
 actor :Usuário Não Autenticado: as anom
 actor :Usuário Autenticado: as user
-
-gen <|-- anom
-gen <|-- user
 
 package "Componente de Usuário" {
     usecase "Cadastrar Usuário" as uc_registration
@@ -20,12 +16,16 @@ anom -- uc_forgot_pass
 user -- uc_logout
 
 
-package "Componente de Tarefa" {
+package "Componente de Disciplina" {
     usecase "Visualizar Notas" as uc_view_grades
 
     usecase "Gerenciar Disciplinas" as uc_disc
     usecase "Associar Tarefa" as uc_association
     
+    uc_disc <.. uc_association : <<extends>>
+}
+
+package "Componente de Tarefa" {
     usecase "Gerenciar Tarefas" as uc_task
     usecase "Registrar/Editar Lembrete" as uc_reminder
     usecase "Registrar/Editar Nota" as uc_grade
@@ -34,8 +34,8 @@ package "Componente de Tarefa" {
     uc_task <.. uc_reminder : <<extends>>
     uc_task <.. uc_grade : <<extends>>
     uc_task <.. uc_done : <<extends>>
-    uc_disc <.. uc_association : <<extends>>
 }
+
 user -- uc_disc
 user -- uc_task
 user -- uc_view_grades
