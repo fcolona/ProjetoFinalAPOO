@@ -1,0 +1,57 @@
+@startuml "Diagrama de Sequência - Listar Tarefas"
+
+actor "Usuário" as User
+participant "View"
+participant "Controller"
+participant "Model"
+database "Banco de Dados" as DB
+
+User ->> View : Solicitar Tarefas Cadastradas
+activate View
+
+View ->> Controller : Requisição HTTP (GET)
+deactivate View
+activate Controller
+
+Controller -> Model : Buscar tarefas
+activate Model
+
+alt Erro do Banco de Dados
+    ' CASO DE ERRO: Falha Interna
+    Model -> DB : Ler Tarefas
+    activate DB
+    Model <-- DB : Exceção / Timeout
+    deactivate DB
+    
+    Controller <-- Model : Exceção capturada
+    
+    View <-- Controller : Resposta HTTP: 500 Internal Server Error
+    activate View
+    User <-- View : Mensagem: "Serviço indisponível, tente mais tarde"
+    deactivate View
+
+else Sucesso
+    Model -> DB : Ler Tarefas
+    activate DB
+    Model <-- DB : Lista de Tarefas
+    deactivate DB
+
+    Controller <-- Model : Lista de Tarefas
+    deactivate Model
+
+    View <-- Controller : Resposta HTTP: 200 OK
+    deactivate Controller
+    activate View
+    
+    alt Lista Vazia
+        ' Caso válido, mas sem dados
+        User <-- View : Mensagem: "Não existem tarefas cadastradas"
+    else Lista Preenchida
+        ' Caso padrão
+        User <-- View : Tela de tarefas
+    end
+    deactivate View
+
+end
+
+@enduml

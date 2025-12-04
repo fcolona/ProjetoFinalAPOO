@@ -14,14 +14,14 @@ Pós-Condições: A tarefa é persistida no banco de dados ou removida, a depend
 Cenário de Sucesso Principal: 
 1. O usuário solicita adicionar uma nova tarefa em uma disciplina específica.
 
-2. O sistema solicita os dados: Título, Tipo (Atividade, Prova, Trabalho), Data de Entrega/Realização e Descrição.
+2. O sistema solicita os dados: Título, Tipo (Atividade, Prova, Trabalho), Data de Entrega e Descrição.
 
 
 3. O usuário fornece os dados solicitados.
 
 4. O sistema valida os dados (ex: data válida, campos obrigatórios preenchidos).
 
-5. O sistema salva a nova tarefa com o status inicial "Pendente".
+5. O sistema salva a nova tarefa com o status inicial "Em Andamento".
 
 
 6. O sistema exibe a lista de tarefas atualizada.
@@ -57,7 +57,7 @@ Ator Principal: Usuário Autenticado
 Interessados e Interesses:
 - Usuário Autenticado: Deseja alterar indicar que uma tarefa foi finalizada para organizar suas pendências.
 
-Pré-Condições: O caso de uso "Gerenciar Tarefas" deve ter sido realizado antes. Assim, a tarefa deve existir e estar com status "Pendente".
+Pré-Condições: O caso de uso "Gerenciar Tarefas" deve ter sido realizado antes. Assim, a tarefa deve existir e estar com status "Pendente" ou "Em Andamento".
 
 Pós-Condições: O status da tarefa é atualizado para "Concluída".
 

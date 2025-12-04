@@ -1,0 +1,67 @@
+@startuml "Diagrama de Sequência - Editar Tarefa"
+
+actor "Usuário" as User
+participant "View"
+participant "Controller"
+participant "Model"
+database "Banco de Dados" as DB
+
+ref over User, View, Controller, Model, DB
+  Caso de Uso: Listar Tarefas
+end ref
+
+User ->> View : Solicitar Edição de Tarefa
+activate View
+
+View ->> Controller : Requisição HTTP (PUT)
+deactivate View
+activate Controller
+
+Controller -> Controller : Validar formato dos dados
+
+alt Dados Inválidos (Campos nulos ou formato errado)
+    ' CASO DE ERRO 1: Validação de Formato falhou
+    View <-- Controller : Resposta HTTP: 400 Bad Request
+    activate View
+    User <-- View : Exibir mensagens de validação
+    deactivate View
+
+else Dados Válidos
+    Controller -> Model : Editar tarefa
+    activate Model
+
+    Model -> DB : Editar Tarefa (Update com ID)
+    activate DB
+    Model <-- DB : Resultado da Operação
+    deactivate DB
+
+    alt Erro do Banco de Dados
+        ' CASO DE ERRO 2: Falha Interna
+        Controller <-- Model : Exceção de Banco de Dados
+        View <-- Controller : Resposta HTTP: 500 Internal Server Error
+        activate View
+        User <-- View : Mensagem: "Erro interno, tente novamente"
+        deactivate View
+        
+    else Tarefa não encontrada (ID inexistente)
+        ' CASO DE ERRO 3: Recurso não encontrado
+        Controller <-- Model : Retorno null
+        View <-- Controller : Resposta HTTP: 404 Not Found
+        activate View
+        User <-- View : Mensagem: "Erro: A tarefa não existe."
+        deactivate View
+        
+    else Sucesso
+        ' Caminho de Sucesso
+        Controller <-- Model : Tarefa atualizada com sucesso
+        deactivate Model
+        
+        View <-- Controller : Resposta HTTP: 200 OK
+        deactivate Controller
+            
+        User <-- View : Tela de confirmação de sucesso
+        deactivate View
+    end
+end
+
+@enduml

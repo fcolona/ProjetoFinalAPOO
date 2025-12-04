@@ -1,0 +1,69 @@
+@startuml "Diagrama de Sequência - Criar Tarefa"
+
+actor "Usuário" as User
+participant "View"
+participant "Controller"
+participant "Model"
+database "Banco de Dados" as DB
+
+User ->> View : Solicitar adição de nova tarefa à disciplina
+activate View
+
+View ->> Controller : Requisição HTTP (POST)
+deactivate View
+activate Controller
+
+Controller -> Controller : Validar formato dos dados
+
+alt Dados Inválidos (Campos nulos ou formato errado)
+    ' CASO DE ERRO 1: Validação falhou
+    View <-- Controller : Resposta HTTP: 400 Bad Request
+    activate View
+    User <-- View : Exibir mensagens de validação
+    deactivate View
+
+else Dados Válidos
+    Controller -> Model : Criar tarefa
+    activate Model
+
+    Model -> DB : Verificar existência da disciplina
+    activate DB
+    Model <-- DB : Resultado (true/false)
+    deactivate DB
+
+    alt Disciplina não encontrada
+        ' CASO DE ERRO 2: Regra de Negócio
+        Controller <-- Model : Erro: Disciplina inexistente
+        View <-- Controller : Resposta HTTP: 404 Not Found
+        activate View
+        User <-- View : Mensagem: "Disciplina não encontrada"
+        deactivate View
+
+    else Disciplina Existe
+        Model -> DB : Criar Tarefa(status="Em Andamento")
+        activate DB
+        Model <-- DB : Sucesso/Fracasso
+        deactivate DB
+
+        alt Erro na Persistência (Banco fora do ar/Constraint)
+            ' CASO DE ERRO 3: Erro de Banco de Dados
+            Controller <-- Model : Exceção de Banco de Dados
+            deactivate Model
+            View <-- Controller : Resposta HTTP: 500 Internal Server Error
+            activate View
+            User <-- View : Mensagem: "Erro interno, tente novamente"
+            deactivate View
+        
+        else Sucesso
+            ' Caminho de Sucesso
+            Controller <-- Model : Tarefa criada
+            View <-- Controller : Resposta HTTP: 201 Created
+            deactivate Controller
+            
+            User <-- View : Tela de confirmação de sucesso
+            deactivate View
+        end
+    end
+end
+
+@enduml
