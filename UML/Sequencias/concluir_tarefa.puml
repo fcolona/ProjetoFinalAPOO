@@ -1,0 +1,75 @@
+@startuml "Diagrama de Sequência - Concluir Tarefa"
+
+actor "Usuário" as User
+participant "View"
+participant "Controller"
+participant "Model"
+database "Banco de Dados" as DB
+
+ref over User, View, Controller, Model, DB
+  Caso de Uso: Listar Tarefas
+end ref
+
+User ->> View : Solicitar Conclusão de Tarefa
+activate View
+
+View ->> Controller : Requisição HTTP (PUT)
+deactivate View
+activate Controller
+
+Controller -> Model : Editar Tarefa (Conclusão)
+activate Model
+
+Model -> DB : Atualizar Status da Tarefa para "CONCLUIDO" (Update com ID)
+activate DB
+Model <-- DB : Resultado da Operação
+deactivate DB
+
+' Removi o deactivate/activate Model aqui para manter a linha contínua
+loop Itera pelos Lembretes da Tarefa
+    Model -> DB : Desagendar Lembrete (Update com ID)
+    activate DB
+    Model <-- DB : Resultado da Operação
+    deactivate DB
+end
+
+' O Model continua ativo aqui, pois ainda não retornou ao Controller
+
+alt Erro do Banco de Dados
+    ' CASO DE ERRO 1: Falha Interna
+    Controller <-- Model : Exceção de Banco de Dados
+    deactivate Model
+    
+    View <-- Controller : Resposta HTTP: 500 Internal Server Error
+    deactivate Controller
+    
+    activate View
+    User <-- View : Mensagem: "Erro interno, tente novamente"
+    deactivate View
+        
+else Tarefa não encontrada (ID inexistente)
+    ' CASO DE ERRO 2: Recurso não encontrado
+    Controller <-- Model : Retorno null
+    deactivate Model
+    
+    View <-- Controller : Resposta HTTP: 404 Not Found
+    deactivate Controller
+    
+    activate View
+    User <-- View : Mensagem: "Erro: A tarefa não existe."
+    deactivate View
+        
+else Sucesso
+    ' Caminho de Sucesso
+    Controller <-- Model : Tarefa atualizada com sucesso
+    deactivate Model
+        
+    View <-- Controller : Resposta HTTP: 200 OK
+    deactivate Controller
+            
+    activate View
+    User <-- View : Tela de confirmação de sucesso
+    deactivate View
+end
+
+@enduml

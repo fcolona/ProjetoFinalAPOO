@@ -1,0 +1,88 @@
+@startuml "Diagrama de Sequência - Editar Tarefa"
+
+actor "Usuário" as User
+participant "View"
+participant "Controller"
+participant "Model"
+database "Banco de Dados" as DB
+participant "Componente de Envio de Email" as Email
+
+ref over User, View, Controller, Model, DB
+  Caso de Uso: Listar Tarefas
+end ref
+
+User ->> View : Solicitar Registro/Edição de Lembrete
+activate View
+
+View ->> Controller : Requisição HTTP (POST/PUT)
+deactivate View
+activate Controller
+
+Controller -> Controller : Validar formato dos dados
+
+alt Dados Inválidos (Campos nulos ou formato errado)
+    ' CASO DE ERRO 1: Validação de Formato falhou
+    View <-- Controller : Resposta HTTP: 400 Bad Request
+    activate View
+    User <-- View : Exibir mensagens de validação
+    deactivate View
+
+else Dados Válidos
+    Controller -> Model : Registrar/Editar Lembrete
+    activate Model
+
+    Model -> DB : Registrar/Editar Lembrete
+    activate DB
+    Model <-- DB : Resultado da Operação
+    deactivate DB
+
+    alt Erro do Banco de Dados
+        ' CASO DE ERRO 2: Falha Interna do BD
+        Controller <-- Model : Exceção de Banco de Dados
+        deactivate Model
+        
+        View <-- Controller : Resposta HTTP: 500 Internal Server Error
+        activate View
+        User <-- View : Mensagem: "Erro interno no Banco de Dados"
+        deactivate View
+    
+    else Tarefa não encontrada (ID inexistente)
+        ' CASO DE ERRO 3: Recurso não encontrado
+        Controller <-- Model : Retorno null ou Exception Not Found
+        deactivate Model
+        
+        View <-- Controller : Resposta HTTP: 404 Not Found
+        activate View
+        User <-- View : Mensagem: "Erro: A tarefa não existe."
+        deactivate View
+
+    else Sucesso no DB (Prosseguir para Email)
+        Model -> Email : Programar Envio de Email
+        activate Email
+        Model <-- Email : Resultado da Operação
+        deactivate Email
+
+        alt Erro de Programação de Envio de Email
+            ' CASO DE ERRO 4: Falha Interna do Componente de Email
+            Controller <-- Model : Exceção de Envio de Email
+            deactivate Model
+
+            View <-- Controller : Resposta HTTP: 500 Internal Server Error
+            activate View
+            User <-- View : Mensagem: "Salvo, mas erro ao agendar notificação"
+            deactivate View
+            
+        else Sucesso Total
+            ' Caminho de Sucesso
+            Controller <-- Model : Lembrete Registrado/Editado
+            deactivate Model
+            
+            View <-- Controller : Resposta HTTP: 200 OK
+            deactivate Controller
+            activate View
+            User <-- View : Tela de confirmação de sucesso
+            deactivate View
+        end
+    end
+end
+@enduml

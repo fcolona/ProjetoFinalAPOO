@@ -31,12 +31,12 @@ class Tarefa {
 
 class Lembrete {
     -Date data
-    -boolean foiDisparado
+    -boolean agendado
 
     +getData()
-    +getFoiDisparado()
+    +isAgendado()
     +setData(data)
-    +marcarComoDisparado()
+    +desagendar()
 }
 
 Tarefa "0..*" -> "1" Status
