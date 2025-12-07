@@ -5,18 +5,24 @@ from typing import Optional, List
 
 # Baseado em classes_tarefa.puml
 class Status(Enum):
+    """Estados possíveis de uma tarefa."""
+
     PENDENTE = "Pendente"
     EM_ANDAMENTO = "Em Andamento"
     CONCLUIDO = "Concluido"
 
 
 class Tipo(Enum):
+    """Tipos de tarefa conforme o escopo do sistema."""
+
     PROVA = "Prova"
     TRABALHO = "Trabalho"
     ATIVIDADE = "Atividade"
 
 
 class Lembrete:
+    """Representa um lembrete associado a uma tarefa."""
+
     def __init__(self, data: datetime):
         self.data = data
         self.agendado = True  # Atributo 'agendado'
@@ -28,6 +34,8 @@ class Lembrete:
 
 
 class Tarefa:
+    """Entidade de domínio, Tarefa com lembretes e status."""
+
     def __init__(
         self,
         id_tarefa: int,
@@ -50,4 +58,5 @@ class Tarefa:
         self.lembretes: List[Lembrete] = []
 
     def adicionar_lembrete(self, data: datetime):
+        """Adiciona um novo lembrete para a tarefa."""
         self.lembretes.append(Lembrete(data))
