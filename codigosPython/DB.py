@@ -6,41 +6,68 @@ import os
 
 
 class BancoDeDados:
+    """Banco de dados em memória com persistência CSV simples."""
+
     CSV_FILENAME = os.path.join(os.path.dirname(__file__), "tarefas.csv")
 
     def __init__(self):
+        """Inicializa o repositório e carrega dados do CSV, se houver."""
         self.tarefas = {}
         self.disciplinas_existentes = {  # Exemplo de disciplinas existentes
             1: "Matemática",
             2: "História",
         }  # Mock de disciplinas
+        self._carregar_csv()  # garante que os dados persistidos sejam carregados
 
     # Simula 'Verificar existência da disciplina' em criar_tarefa.puml
     def existe_disciplina(self, id_disciplina: int) -> bool:
+        """Verifica se a disciplina informada existe no catálogo mockado."""
         return id_disciplina in self.disciplinas_existentes
 
     # Simula 'Criar Tarefa' em criar_tarefa.puml
-    def salvar_tarefa(self, tarefa: Tarefa):
+    def salvar_tarefa(self, tarefa: Tarefa) -> bool:
+        """Persiste/atualiza uma tarefa em memória e no CSV."""
         # Simulação de erro de banco (Constraint/Conexão)'
         if tarefa.titulo == "ErroDB":
             raise Exception("Erro de Conexão com Banco de Dados")
+        if isinstance(tarefa.tipo, str):
+            tarefa.tipo = self._tipo_from_value(tarefa.tipo)
+        if isinstance(getattr(tarefa, "status", None), str):
+            tarefa.status = self._status_from_value(tarefa.status)
+
+        # IDs devem ser únicos: rejeita se o ID já existe e está sendo reutilizado indevidamente
+        if tarefa.id in self.tarefas and self.tarefas[tarefa.id] is not tarefa:
+            raise Exception(f"ID de tarefa já existente: {tarefa.id}")
+
         self.tarefas[tarefa.id] = tarefa
         self._salvar_csv()
         return True
 
     def buscar_tarefa(self, id_tarefa: int) -> Optional[Tarefa]:
+        """Retorna a tarefa pelo ID ou None se não existir."""
         return self.tarefas.get(id_tarefa)
 
     # Simula 'Atualizar Status' e 'Desagendar Lembrete' em concluir_tarefa.puml
-    def atualizar_tarefa(self, tarefa: Tarefa):
+    def atualizar_tarefa(self, tarefa: Tarefa) -> bool:
+        """Atualiza uma tarefa existente e salva no CSV."""
         if tarefa.id not in self.tarefas:
             return False
         self.tarefas[tarefa.id] = tarefa
         self._salvar_csv()
         return True
 
+    def id_existe(self, id_tarefa: int) -> bool:
+        """Verifica se um ID de tarefa já existe."""
+        return id_tarefa in self.tarefas
+
+    def proximo_id(self) -> int:
+        """Calcula o próximo ID com base no maior ID atual."""
+        # calcula próximo ID com base no maior ID carregado do CSV
+        return (max(self.tarefas.keys()) + 1) if self.tarefas else 1
+
     # CSV persistence helpers
-    def _carregar_csv(self):
+    def _carregar_csv(self) -> None:
+        """Carrega tarefas do CSV, ignorando linhas inválidas."""
         if not os.path.exists(self.CSV_FILENAME):
             return
         try:
@@ -48,15 +75,21 @@ class BancoDeDados:
                 reader = csv.DictReader(f)
                 for row in reader:
                     try:
-                        id_tarefa = int(row["id"])
-                        titulo = row["titulo"]
-                        descricao = row.get("descricao", "")
-                        data_entrega = datetime.fromisoformat(row["data_entrega"])
-                        tipo = self._tipo_from_value(row["tipo"])
+                        id_tarefa = int(row.get("id", "").strip())
+                        titulo = row.get("titulo", "").strip()
+                        if not id_tarefa or not titulo:
+                            continue
+                        descricao = row.get("descricao", "").strip()
+                        data_raw = row.get("data_entrega", "").strip()
+                        if not data_raw:
+                            continue
+                        data_entrega = datetime.fromisoformat(data_raw)
+                        tipo = self._tipo_from_value(row.get("tipo", "").strip())
                         status = self._status_from_value(
-                            row.get("status", Status.EM_ANDAMENTO.value)
+                            row.get("status", Status.EM_ANDAMENTO.value).strip()
                         )
-                        nota = float(row["nota"]) if row.get("nota") else None
+                        nota_str = row.get("nota", "").strip()
+                        nota = float(nota_str) if nota_str not in ("", None) else None
 
                         tarefa = Tarefa(
                             id_tarefa=id_tarefa,
@@ -76,7 +109,8 @@ class BancoDeDados:
             # Falha ao carregar CSV, não bloqueia a aplicação
             pass
 
-    def _salvar_csv(self):
+    def _salvar_csv(self) -> None:
+        """Grava todas as tarefas atuais no CSV, sobrescrevendo o arquivo."""
         try:
             with open(self.CSV_FILENAME, mode="w", newline="", encoding="utf-8") as f:
                 fieldnames = [
@@ -90,7 +124,7 @@ class BancoDeDados:
                 ]
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
-                for tarefa in self.tarefas.values():
+                for tarefa in sorted(self.tarefas.values(), key=lambda t: t.id):
                     writer.writerow(
                         {
                             "id": tarefa.id,
@@ -107,14 +141,18 @@ class BancoDeDados:
             pass
 
     def _tipo_from_value(self, value: str) -> Tipo:
+        """Converte nome/valor (case-insensitive) em Tipo; fallback ATIVIDADE."""
+        v = (value or "").strip().casefold()
         for t in Tipo:
-            if t.value == value:
+            if v == t.value.casefold() or v == t.name.casefold():
                 return t
         # fallback por segurança
         return Tipo.ATIVIDADE
 
     def _status_from_value(self, value: str) -> Status:
+        """Converte nome/valor (case-insensitive) em Status; fallback EM_ANDAMENTO."""
+        v = (value or "").strip().casefold()
         for s in Status:
-            if s.value == value:
+            if v == s.value.casefold() or v == s.name.casefold():
                 return s
         return Status.EM_ANDAMENTO
