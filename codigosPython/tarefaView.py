@@ -1,12 +1,18 @@
 from datetime import datetime
 from classes import Tipo
+import os
 
 
 class TarefaView:
+    """Interface de linha de comando para criar e concluir tarefas."""
+
     def __init__(self, controller):
+        """Recebe o controller para enviar ações do usuário."""
         self.controller = controller
 
     def exibir_menu_principal(self):
+        """Exibe opções principais e retorna a seleção do usuário."""
+        self.limpar_tela()
         print("\n=== SISTEMA DE GESTÃO DE TAREFAS ===")
         print("1. Nova Tarefa")
         print("2. Concluir Tarefa")
@@ -17,66 +23,60 @@ class TarefaView:
     # Implementação do fluxo visual de "Criar Tarefa" (referência: criar_tarefa.puml)
 
     def renderizar_criar_tarefa(self):
+        """Fluxo de criação de tarefa com validações de entrada."""
+        self.limpar_tela()
         print("\n--- [Tela] Nova Tarefa ---")
-
         # 1. Coleta de dados (User -> View)
         try:
-            id_disciplina = int(input("ID da Disciplina: "))
-            titulo = input("Título: ")
-            descricao = input("Descrição: ")
-            data_str = input("Data de Entrega (dd/mm/aaaa): ")
-            tipo_str = input("Tipo (PROVA, TRABALHO, ATIVIDADE): ").upper()
+            id_disciplina = self._input_int("ID da Disciplina: ")
+            titulo = self._input_nonempty("Título: ")
+            descricao = input("Descrição: ").strip()
 
-            # Conversão simples de dados de entrada
-            data_entrega = datetime.strptime(data_str, "%d/%m/%Y")
+            # aceita data com ou sem horário
+            data_entrega = self._input_datetime(
+                "Data/Horário de Entrega (dd/mm/aaaa [HH:MM]): "
+            )
 
-            # Montagem do payload (simula o corpo da requisição HTTP)
-            # Mapeamento de string para Enum (logica simples de front-end)
-            tipo_map = {
-                "PROVA": Tipo.PROVA,
-                "TRABALHO": Tipo.TRABALHO,
-                "ATIVIDADE": Tipo.ATIVIDADE,
-            }
+            # Montagem do payload (simula o corpo de requisição HTTP)
+            # Mapeamento de string para Enum (lógica simples de front-end)
+            tipo = self._input_tipo("Tipo (PROVA, TRABALHO, ATIVIDADE): ")
 
             payload = {
                 "id_disciplina": id_disciplina,
                 "titulo": titulo,
                 "descricao": descricao,
                 "data_entrega": data_entrega,
-                "tipo": tipo_map.get(tipo_str),
+                "tipo": tipo,
             }
-
             # 2. Envio ao Controller (View -> Controller : Requisição HTTP POST)
             resposta = self.controller.post_criar_tarefa(payload)
-
             # 3. Exibição do Resultado
             self._processar_resposta_http(resposta)
-
-        except ValueError:
-            print("[View] Erro de formato nos dados inseridos.")
+        except KeyboardInterrupt:
+            print("\nOperação cancelada.")
 
     # Implementação do fluxo visual de "Concluir Tarefa" (referência: concluir_tarefa.puml)
 
     def renderizar_concluir_tarefa(self):
+        """Fluxo de conclusão de tarefa com validação de ID."""
+        self.limpar_tela()
         print("\n--- [Tela] Concluir Tarefa ---")
 
         # 1. Coleta de dados
         try:
-            id_tarefa = int(input("Digite o ID da Tarefa a concluir: "))
-
             # 2. Envio ao Controller (View -> Controller : Requisição HTTP PUT)
+            id_tarefa = self._input_int("Digite o ID da Tarefa a concluir: ")
             resposta = self.controller.put_concluir_tarefa(id_tarefa)
-
             # 3. Exibição do Resultado
             self._processar_resposta_http(resposta)
-
-        except ValueError:
-            print("[View] ID inválido.")
+        except KeyboardInterrupt:
+            print("\nOperação cancelada.")
 
     # Método Auxiliar para tratar "Códigos HTTP"
     # Baseado nas respostas mostradas nos diagramas de sequência
 
     def _processar_resposta_http(self, resposta):
+        """Interpreta o 'status' e o 'body' simulando códigos HTTP."""
         status = resposta["status"]
         body = resposta["body"]
 
@@ -88,11 +88,17 @@ class TarefaView:
             # View <-- Controller : Resposta HTTP: 201 Created
             # O body presente será o objeto Tarefa
             titulo = body.titulo if hasattr(body, "titulo") else "Nova Tarefa"
-            print(f"CRIADO: Tarefa '{titulo}' registrada com sucesso!")
+            tarefa_id = getattr(body, "id", None)
+            print(
+                f"CRIADO: Tarefa '{titulo}' registrada com sucesso!"
+                f"{' ID: ' + str(tarefa_id) if tarefa_id is not None else ''}"
+            )
 
         elif status == 400:
             # View <-- Controller : Resposta HTTP: 400 Bad Request
-            print(f"AVISO: Dados inválidos - {body}")  # "Exibir mensagens de validação"
+            print(
+                f"AVISO: Entrada de dados inválida - {body}"
+            )  # "Exibir mensagens de validação"
 
         elif status == 404:
             # View <-- Controller : Resposta HTTP: 404 Not Found
@@ -102,7 +108,84 @@ class TarefaView:
 
         elif status == 500:
             # View <-- Controller : Resposta HTTP: 500 Internal Server Error
-            print(f"ERRO CRÍTICO: {body}")  # "Mensagem: Erro interno..."
+            print(f"ERRO INTERNO: {body}")  # "Mensagem: Erro interno..."
 
         else:
-            print(f"Status desconhecido ({status}): {body}")
+            print(f"Status {status}: {body}")
+
+    # Helpers de entrada robusta
+    def _input_int(self, prompt: str) -> int:
+        """Lê um inteiro positivo com repetição até ser válido."""
+        while True:
+            try:
+                v = int(input(prompt).strip())
+                if v <= 0:
+                    print("Informe um número positivo.")
+                    continue
+                return v
+            except ValueError:
+                print("Valor inválido, tente novamente.")
+
+    def _input_nonempty(self, prompt: str) -> str:
+        """Lê uma string não vazia."""
+        while True:
+            v = input(prompt).strip()
+            if v:
+                return v
+            print("O campo não pode ser vazio.")
+
+    def _input_date(self, prompt: str) -> datetime:
+        """Aceita múltiplos formatos de data e retorna datetime."""
+        while True:
+            s = input(prompt).strip()
+            for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y"):
+                try:
+                    return datetime.strptime(s, fmt)
+                except ValueError:
+                    pass
+            print("Data inválida. Use formatos: dd/mm/aaaa ou yyyy-mm-dd.")
+
+    def _input_datetime(self, prompt: str) -> datetime:
+        """Aceita data com ou sem horário. Exemplos: 25/12/2025, 25/12/2025 14:30, 2025-12-25 14:30."""
+        while True:
+            s = input(prompt).strip()
+            formatos = (
+                "%d/%m/%Y %H:%M",
+                "%d/%m/%Y",
+                "%Y-%m-%d %H:%M",
+                "%Y-%m-%d",
+                "%d-%m-%Y %H:%M",
+                "%d-%m-%Y",
+            )
+            for fmt in formatos:
+                try:
+                    return datetime.strptime(s, fmt)
+                except ValueError:
+                    pass
+            print(
+                "Data/Horário inválido. Use dd/mm/aaaa [HH:MM] ou yyyy-mm-dd [HH:MM]."
+            )
+
+    def _input_tipo(self, prompt: str) -> Tipo:
+        """Lê e normaliza o tipo (nome ou valor do enum)."""
+        while True:
+            s = input(prompt).strip()
+            t = self._normalizar_tipo(s)
+            if t:
+                return t
+            print("Tipo inválido. Opções: PROVA, TRABALHO, ATIVIDADE.")
+
+    def _normalizar_tipo(self, valor: str):
+        """Converte texto para enum Tipo, ou None se inválido."""
+        v = valor.strip().casefold()
+        for t in Tipo:
+            if v == t.name.casefold() or v == t.value.casefold():
+                return t
+        return None
+
+    def limpar_tela(self):
+        """Limpa a tela do terminal (Windows/Linux/macOS)."""
+        try:
+            os.system("cls" if os.name == "nt" else "clear")
+        except Exception:
+            pass
