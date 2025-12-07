@@ -1,4 +1,4 @@
-@startuml "Diagram de Casos de Uso"
+@startuml "Diagrama de Casos de Uso"
 left to right direction
 
 actor :Usuário Não Autenticado: as anom

@@ -39,8 +39,8 @@ class Lembrete {
     +desagendar()
 }
 
-Tarefa "0..*" -> "1" Status
-Tipo "1" <- "0..*" Tarefa
 Tarefa "1" *-- "0..*" Lembrete
+Tarefa "0..*" --> "1" Status
+Tipo "1" <-- "0..*" Tarefa
 
 @enduml

@@ -7,7 +7,7 @@ participant "Model"
 database "Banco de Dados" as DB
 
 ref over User, View, Controller, Model, DB
-  Caso de Uso: Listar Tarefas
+  Diagrama de Sequência: Listar Tarefas
 end ref
 
 User ->> View : Solicitar Remoção de Tarefa
