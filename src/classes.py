@@ -50,11 +50,11 @@ class Tarefa:
         self.data_entrega = data_entrega
         self.tipo = tipo
         self.nota: Optional[float] = (
-            None  # Optional<Int> no diagrama, adaptado para float
+            None 
         )
         self.status = (
-            Status.EM_ANDAMENTO
-        )  # Status inicial conforme Caso de Uso uc_task (presente em casos_de_uso.puml)
+            Status.EM_ANDAMENTO  # Status inicial
+        ) 
         self.lembretes: List[Lembrete] = []
 
     def adicionar_lembrete(self, data: datetime):

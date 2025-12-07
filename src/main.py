@@ -3,6 +3,7 @@ from DB import BancoDeDados
 from tarefaModel import TarefaModel
 from tarefaController import TarefaController
 from tarefaView import TarefaView
+import time
 
 if __name__ == "__main__":
     # 1. Setup Inicial (Injeção de Dependência)
@@ -32,6 +33,9 @@ if __name__ == "__main__":
                 # Equivalente ao Cenário 3
                 # A View pede o ID e chama o controller para concluir
                 view.renderizar_concluir_tarefa()
+            
+            elif opcao == "3":
+                view.renderizar_listar_tarefas()
 
             elif opcao == "0":
                 print("Saindo do sistema...")
@@ -39,6 +43,7 @@ if __name__ == "__main__":
 
             else:
                 print("Opção inválida, tente novamente.")
+                time.sleep(1)
 
         except KeyboardInterrupt:
             print("\nSaindo do sistema...")

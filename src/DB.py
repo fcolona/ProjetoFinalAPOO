@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import List
 from classes import Tarefa, Tipo, Status
 import csv
 from datetime import datetime
@@ -156,3 +157,6 @@ class BancoDeDados:
             if v == s.value.casefold() or v == s.name.casefold():
                 return s
         return Status.EM_ANDAMENTO
+    
+    def listar_tarefas(self) -> List[Tarefa]:
+        return self.tarefas 

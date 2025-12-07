@@ -97,3 +97,12 @@ class TarefaModel:
         except Exception:
             # Controller <-- Model : Exceção de Banco de Dados
             return {"sucesso": False, "erro": "Erro interno", "status_code": 500}
+    
+    def listar_tarefas(self) -> dict:
+        tarefas = self.db.listar_tarefas()
+        return {
+            "sucesso": True,
+            "mensagem": "Tarefas listadas com sucesso",
+            "status_code": 200,
+            "tarefas" : tarefas
+        }

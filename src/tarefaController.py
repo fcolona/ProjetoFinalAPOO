@@ -14,7 +14,7 @@ class TarefaController:
     # Endpoint para Criar Tarefa
     def post_criar_tarefa(self, dados: dict) -> dict:
         """Valida/coage dados de criação e delega ao model."""
-        print(f"--- Recebendo Request POST Criar Tarefa: {dados.get('titulo')} ---")
+        #print(f"--- Recebendo Request POST Criar Tarefa: {dados.get('titulo')} ---")
         try:
             titulo = (dados.get("titulo") or "").strip()
             id_disciplina = dados.get("id_disciplina")
@@ -77,7 +77,7 @@ class TarefaController:
     # Endpoint para Concluir Tarefa
     def put_concluir_tarefa(self, id_tarefa: int) -> dict:
         """Recebe o ID e delega a conclusão ao model."""
-        print(f"--- Recebendo Request PUT Concluir Tarefa ID: {id_tarefa} ---")
+        #print(f"--- Recebendo Request PUT Concluir Tarefa ID: {id_tarefa} ---")
         # Controller -> Model : Editar Tarefa (Conclusão)
         try:
             id_tarefa = int(id_tarefa)
@@ -90,6 +90,15 @@ class TarefaController:
         return {
             "status": resultado["status_code"],
             "body": resultado.get("mensagem", resultado.get("erro")),
+        }
+    
+    # Endpoint para LIstar Tarefas
+    def get_listar_tarefas(self) -> dict:
+        #print(f"--- Recebendo Request GET Listar Tarefas")
+        resultado = self.model.listar_tarefas() 
+        return {
+            "status": resultado["status_code"],
+            "body": resultado["tarefas"],
         }
 
     # Helpers

@@ -1,6 +1,7 @@
 from datetime import datetime
 from classes import Tipo
 import os
+import time
 
 
 class TarefaView:
@@ -16,12 +17,12 @@ class TarefaView:
         print("\n=== SISTEMA DE GESTÃO DE TAREFAS ===")
         print("1. Nova Tarefa")
         print("2. Concluir Tarefa")
+        print("3. Listar Tarefas")
         print("0. Sair")
         opcao = input("Selecione uma opção: ")
         return opcao
 
-    # Implementação do fluxo visual de "Criar Tarefa" (referência: criar_tarefa.puml)
-
+    # Implementação do fluxo visual de "Criar Tarefa"
     def renderizar_criar_tarefa(self):
         """Fluxo de criação de tarefa com validações de entrada."""
         self.limpar_tela()
@@ -54,13 +55,30 @@ class TarefaView:
             self._processar_resposta_http(resposta)
         except KeyboardInterrupt:
             print("\nOperação cancelada.")
+            print("Pressione qualquer tecla para retornar...")
+            input("")
+    
+    def renderizar_listar_tarefas(self):
+        """Fluxo de listagem de tarefas. """
+        self.limpar_tela()
+        resposta = self.controller.get_listar_tarefas()
+        self.processar_tarefas(resposta)
+        print("Pressione qualquer tecla para retornar...")
+        input("")
 
-    # Implementação do fluxo visual de "Concluir Tarefa" (referência: concluir_tarefa.puml)
+    def processar_tarefas(self, resposta):
+        for id_tarefa, tarefa in resposta['body'].items():
+            print(f"{id_tarefa}) {tarefa.titulo} - {tarefa.tipo.value} - {tarefa.data_entrega} - {tarefa.status.value}", end=" ")
+            if tarefa.nota != None: print(f"- {tarefa.nota}")
+            else: print("")
 
+    # Implementação do fluxo visual de "Concluir Tarefa"
     def renderizar_concluir_tarefa(self):
         """Fluxo de conclusão de tarefa com validação de ID."""
         self.limpar_tela()
         print("\n--- [Tela] Concluir Tarefa ---")
+        resposta = self.controller.get_listar_tarefas()
+        self.processar_tarefas(resposta)
 
         # 1. Coleta de dados
         try:
@@ -71,10 +89,10 @@ class TarefaView:
             self._processar_resposta_http(resposta)
         except KeyboardInterrupt:
             print("\nOperação cancelada.")
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
-    # Método Auxiliar para tratar "Códigos HTTP"
-    # Baseado nas respostas mostradas nos diagramas de sequência
-
+    # Método Auxiliar para tratar Códigos HTTP
     def _processar_resposta_http(self, resposta):
         """Interpreta o 'status' e o 'body' simulando códigos HTTP."""
         status = resposta["status"]
@@ -82,36 +100,55 @@ class TarefaView:
 
         if status == 200:
             # View <-- Controller : Resposta HTTP: 200 OK
-            print(f"SUCESSO: {body}")  # "Tela de confirmação"
+            self.limpar_tela()
+            print("\n--- [Tela] Sucesso ---")
+            print(f"{body}") 
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
         elif status == 201:
+            self.limpar_tela()
+            print("\n--- [Tela] Sucesso ---")
             # View <-- Controller : Resposta HTTP: 201 Created
             # O body presente será o objeto Tarefa
             titulo = body.titulo if hasattr(body, "titulo") else "Nova Tarefa"
             tarefa_id = getattr(body, "id", None)
-            print(
-                f"CRIADO: Tarefa '{titulo}' registrada com sucesso!"
-                f"{' ID: ' + str(tarefa_id) if tarefa_id is not None else ''}"
-            )
+            print(f"Tarefa '{titulo}' registrada com sucesso!")
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
         elif status == 400:
+            self.limpar_tela()
+            print("\n--- [Tela] Erro ---")
             # View <-- Controller : Resposta HTTP: 400 Bad Request
             print(
-                f"AVISO: Entrada de dados inválida - {body}"
+                f"Entrada de dados inválida - {body}"
             )  # "Exibir mensagens de validação"
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
         elif status == 404:
+            self.limpar_tela()
+            print("\n--- [Tela] Erro ---")
             # View <-- Controller : Resposta HTTP: 404 Not Found
             print(
-                f"NÃO ENCONTRADO: {body}"
+                f"{body}"
             )  # "Mensagem: Disciplina/Tarefa não encontrada"
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
         elif status == 500:
+            self.limpar_tela()
+            print("\n--- [Tela] Erro de Recurso Não Encontrado ---")
             # View <-- Controller : Resposta HTTP: 500 Internal Server Error
-            print(f"ERRO INTERNO: {body}")  # "Mensagem: Erro interno..."
+            print(f"{body}")  # "Mensagem: Erro interno..."
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
         else:
             print(f"Status {status}: {body}")
+            print("Pressione qualquer tecla para retornar...")
+            input("")
 
     # Helpers de entrada robusta
     def _input_int(self, prompt: str) -> int:

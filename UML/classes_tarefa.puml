@@ -16,7 +16,7 @@ class Tarefa {
     -String titulo
     -String descricao
     -Date dataEntrega
-    -Optional<Int> nota
+    -Optional<float> nota
 
     +getTitulo()
     +getDescricao()
