@@ -1,5 +1,5 @@
 @startuml "Diagrama de Componentes"
-left to right direction
+top to bottom direction
 ' -- Definição dos Elementos --
 
 actor :Usuário Autenticado: as user
