@@ -83,7 +83,7 @@ Cenário de Sucesso Principal:
 2. O usuário seleciona a opção "Registrar Nota".
 3. O sistema exibe o campo de nota atual (se houver).
 4. O usuário insere a nota.
-5. O sistema valida se a nota é um valor númerico não negativo.
+5. O sistema valida se a nota é um valor numérico não negativo.
 6. O sistema salva a nota associada à tarefa.
 
 ---
