@@ -16,7 +16,55 @@ class BancoDeDados:
         self.tarefas = {}
         self.disciplinas_existentes = {  # Exemplo de disciplinas existentes
             1: "Matemática",
-            2: "História",
+            2: "Português",
+            3: "História",
+            4: "Geografia",
+            5: "Ciências",
+            6: "Biologia",
+            7: "Física",
+            8: "Química",
+            9: "Inglês",
+            10: "Espanhol",
+            11: "Artes",
+            12: "Educação Física",
+            13: "Literatura",
+            14: "Redação",
+            15: "Gramática",
+            16: "Sociologia",
+            17: "Filosofia",
+            18: "Tecnologia da Informação",
+            19: "Programação",
+            20: "Robótica",
+            21: "Educação Financeira",
+            22: "Empreendedorismo",
+            23: "Música",
+            24: "Teatro",
+            25: "Desenho Geométrico",
+            26: "Estatística",
+            27: "Geometria",
+            28: "Algebra",
+            29: "Cálculo",
+            30: "Astronomia",
+            31: "Ecologia",
+            32: "Psicologia",
+            33: "Direito",
+            34: "Metodologia Científica",
+            35: "Informática",
+            36: "Lógica",
+            37: "Educação Ambiental",
+            38: "Educação Digital",
+            39: "Projetos Interdisciplinares",
+            40: "Oficina de Texto",
+            41: "Comunicação",
+            42: "Geopolítica",
+            43: "Atualidades",
+            44: "Arqueologia",
+            45: "Antropologia",
+            46: "Administração",
+            47: "Marketing",
+            48: "Economia",
+            49: "Contabilidade",
+            50: "Desenvolvimento Web",
         }  # Mock de disciplinas
         self._carregar_csv()  # garante que os dados persistidos sejam carregados
 
@@ -37,8 +85,9 @@ class BancoDeDados:
             tarefa.status = self._status_from_value(tarefa.status)
 
         # IDs devem ser únicos: rejeita se o ID já existe e está sendo reutilizado indevidamente
+        # Race Condition. Se o ID já existir (ex: clique duplo), calcula-se o próximo para evitar erro 500.
         if tarefa.id in self.tarefas and self.tarefas[tarefa.id] is not tarefa:
-            raise Exception(f"ID de tarefa já existente: {tarefa.id}")
+            tarefa.id = self.proximo_id()
 
         self.tarefas[tarefa.id] = tarefa
         self._salvar_csv()
@@ -137,7 +186,10 @@ class BancoDeDados:
                             "nota": "" if tarefa.nota is None else tarefa.nota,
                         }
                     )
-        except Exception:
+        except Exception as e:
+            print(
+                f"AVISO: Falha ao salvar CSV. Verifique se o arquivo está aberto. Erro: {e}"
+            )
             # Em caso de erro, silenciosamente não persiste para não quebrar o fluxo
             pass
 
@@ -157,6 +209,6 @@ class BancoDeDados:
             if v == s.value.casefold() or v == s.name.casefold():
                 return s
         return Status.EM_ANDAMENTO
-    
+
     def listar_tarefas(self) -> List[Tarefa]:
-        return self.tarefas 
+        return self.tarefas
