@@ -14,7 +14,7 @@ class TarefaController:
     # Endpoint para Criar Tarefa
     def post_criar_tarefa(self, dados: dict) -> dict:
         """Valida/coage dados de criação e delega ao model."""
-        #print(f"--- Recebendo Request POST Criar Tarefa: {dados.get('titulo')} ---")
+        # print(f"--- Recebendo Request POST Criar Tarefa: {dados.get('titulo')} ---")
         try:
             titulo = (dados.get("titulo") or "").strip()
             id_disciplina = dados.get("id_disciplina")
@@ -41,13 +41,17 @@ class TarefaController:
             ok, motivo = self._validar_data_str(data_entrega)
 
             if not ok:
-                return {"status": 400, "body": motivo}
+                # Diagnóstico: mostra o valor recebido e a razão
+                return {
+                    "status": 400,
+                    "body": f"Data recebida: '{data_entrega}'. Motivo: {motivo}",
+                }
             data_entrega = self._coerce_datetime(data_entrega)
 
             if not isinstance(data_entrega, datetime):
                 return {
                     "status": 400,
-                    "body": "Data/Horário inválido. Use dd/mm/aaaa [HH:MM] ou yyyy-mm-dd [HH:MM].",
+                    "body": f"Data/Horário inválido. Recebido: '{dados.get('data_entrega')}'. Use dd/mm/aaaa [HH:MM] ou yyyy-mm-dd [HH:MM].",
                 }
 
             tipo = self._coerce_tipo(tipo)
@@ -77,7 +81,7 @@ class TarefaController:
     # Endpoint para Concluir Tarefa
     def put_concluir_tarefa(self, id_tarefa: int) -> dict:
         """Recebe o ID e delega a conclusão ao model."""
-        #print(f"--- Recebendo Request PUT Concluir Tarefa ID: {id_tarefa} ---")
+        # print(f"--- Recebendo Request PUT Concluir Tarefa ID: {id_tarefa} ---")
         # Controller -> Model : Editar Tarefa (Conclusão)
         try:
             id_tarefa = int(id_tarefa)
@@ -91,11 +95,11 @@ class TarefaController:
             "status": resultado["status_code"],
             "body": resultado.get("mensagem", resultado.get("erro")),
         }
-    
+
     # Endpoint para LIstar Tarefas
     def get_listar_tarefas(self) -> dict:
-        #print(f"--- Recebendo Request GET Listar Tarefas")
-        resultado = self.model.listar_tarefas() 
+        # print(f"--- Recebendo Request GET Listar Tarefas")
+        resultado = self.model.listar_tarefas()
         return {
             "status": resultado["status_code"],
             "body": resultado["tarefas"],
@@ -158,8 +162,14 @@ class TarefaController:
             if re.match(regex, s):
                 padrao_combinou = True
                 try:
-                    datetime.strptime(s, fmt)
-                    return True, None  # válido no calendário
+                    # strptime já valida meses com zero à esquerda (ex.: 08)
+                    dt = datetime.strptime(s, fmt)
+                    # valida faixa de hora/minuto quando presente
+                    if "%H:%M" in fmt and not (
+                        0 <= dt.hour <= 23 and 0 <= dt.minute <= 59
+                    ):
+                        return False, "Horário inexistente (hora/minuto fora da faixa)."
+                    return True, None
                 except ValueError:
                     # Padrão ok, mas data impossível (ex.: 31/02/2024)
                     return False, "Data inexistente no calendário."
