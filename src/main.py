@@ -4,9 +4,13 @@ from tarefaModel import TarefaModel
 from tarefaController import TarefaController
 from tarefaView import TarefaView
 import time
+import os
 
 if __name__ == "__main__":
     # 1. Setup Inicial (Injeção de Dependência)
+    # Garante que o CSV seja lido/escrito dentro de src/
+    BancoDeDados.CSV_FILENAME = os.path.join(os.path.dirname(__file__), "tarefas.csv")
+
     db = BancoDeDados()
 
     # O Model recebe o DB para poder persistir os dados
@@ -33,7 +37,7 @@ if __name__ == "__main__":
                 # Equivalente ao Cenário 3
                 # A View pede o ID e chama o controller para concluir
                 view.renderizar_concluir_tarefa()
-            
+
             elif opcao == "3":
                 view.renderizar_listar_tarefas()
 
