@@ -21,8 +21,12 @@ package "Componente de Disciplina" {
 
     usecase "Gerenciar Disciplinas" as uc_disc
     usecase "Associar Tarefa" as uc_association
+    usecase "Configurar critérios de Avaliação" as uc_eval_criteria
+
     
     uc_disc <.. uc_association : <<extends>>
+    uc_disc <.. uc_eval_criteria : <<extends>>
+
 }
 
 package "Componente de Tarefa" {
