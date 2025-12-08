@@ -37,14 +37,14 @@ class TarefaController:
             except Exception:
                 return {"status": 400, "body": "ID da disciplina deve ser numérico."}
 
-            # Validação detalhada de data
+            # Validação obrigando horário
             ok, motivo = self._validar_data_str(data_entrega)
 
             if not ok:
                 # Diagnóstico: mostra o valor recebido e a razão
                 return {
                     "status": 400,
-                    "body": f"Data recebida: '{data_entrega}'. Motivo: {motivo}",
+                    "body": f"Data/Horário inválido: {motivo}",
                 }
             data_entrega = self._coerce_datetime(data_entrega)
 
@@ -107,7 +107,7 @@ class TarefaController:
 
     # Helpers
     def _coerce_datetime(self, v) -> datetime | None:
-        """Converte string em datetime suportando formatos com e sem horário."""
+        """Converte string em datetime, exigindo horário (HH:MM)."""
         if isinstance(v, datetime):
             return v
         if isinstance(v, str):
@@ -137,7 +137,7 @@ class TarefaController:
         return None
 
     def _validar_data_str(self, v) -> tuple[bool, str | None]:
-        """Valida formato e existência no calendário. Retorna (ok, motivo_erro)."""
+        """Valida formato e existência no calendário, exigindo horário. Retorna (ok, motivo_erro)."""
         if isinstance(v, datetime):
             return True, None
         if not isinstance(v, str):

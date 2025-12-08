@@ -32,9 +32,9 @@ class TarefaView:
             titulo = self._input_nonempty("Título: ")
             descricao = input("Descrição: ").strip()
 
-            # aceita data com ou sem horário
+            # horário obrigatório
             data_entrega = self._input_datetime(
-                "Data/Horário de Entrega (dd/mm/aaaa [HH:MM]): "
+                "Data e Horário de Entrega (dd/mm/aaaa HH:MM ou yyyy-mm-dd HH:MM): "
             )
 
             # Montagem do payload (simula o corpo de requisição HTTP)
@@ -177,7 +177,7 @@ class TarefaView:
             print("Data inválida. Use formatos: dd/mm/aaaa ou yyyy-mm-dd.")
 
     def _input_datetime(self, prompt: str) -> datetime:
-        """Aceita data com ou sem horário. Exemplos: 25/12/2025, 25/12/2025 14:30, 2025-12-25 14:30."""
+        """Aceita data com horário. Exemplos: 25/12/2025 14:30, 2025-12-25 14:30, 25-12-2025 14:30."""
         while True:
             s = input(prompt).strip()
             formatos = (
