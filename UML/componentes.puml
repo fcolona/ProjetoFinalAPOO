@@ -1,72 +1,109 @@
-@startuml "Diagrama de Componentes"
-top to bottom direction
-' -- Definição dos Elementos --
+@startuml "Diagrama de Componentes Otimizado - Setas Separadas"
+skinparam ranksep 80
+left to right direction
 
 actor :Usuário Autenticado: as user
 
-package "Camada de Apresentação" {
-    [Componente de Interface de Usuário] as comp_interface
+package "View" {
+    [<<View>> \n Componente de Usuário] as view_user
+    [<<View>> \n Componente de Disciplina] as view_disc
+    [<<View>> \n Componente de Tarefa] as view_task
+    [<<View>> \n Componente de Frequência] as view_freq
+    [<<View>> \n Componente de Relatório] as view_dashboard
 }
 
-package "Camada de Negócio" {
-    [Componente de Usuário] as comp_user
-    [Componente de Disciplina] as comp_disc
-    [Componente de Tarefa] as comp_task
-    [Componente de Frequência] as comp_freq
-    [Componente de Relatório] as comp_dashboard
-    [Componente de Envio de Email] as comp_email
+package "Controller" {
+    [<<Controller>> \n Componente de Usuário] as control_user
+    [<<Controller>> \n  Componente de Disciplina] as control_disc
+    [<<Controller>> \n  Componente de Tarefa] as control_task
+    [<<Controller>> \n  Componente de Frequência] as control_freq
+    [<<Controller>> \n  Componente de Relatório] as control_dashboard
+    [<<Controller>> \n  Componente de Envio de Email] as control_email
 }
 
-package "Camada de Persistência" {
-    [Componente de Acesso a DB de Usuário] as access_user
-    [Componente de Acesso a DB de Disciplina] as access_disc
-    [Componente de Acesso a DB de Tarefa] as access_task
-    [Componente de Acesso a DB de Faltas] as access_freq
+package "Model" {
+    [<<Model>> \n Componente de Acesso a DB de Usuário] as access_user
+    [<<Model>> \n Componente de Acesso a DB de Disciplina] as access_disc
+    [<<Model>> \n Componente de Acesso a DB de Tarefa] as access_task
+    [<<Model>> \n Componente de Acesso a DB de Frequência] as access_freq
 }
 
 database "Banco de Dados" {
-    [DB Usuários]
-    [DB Disciplinas]
-    [DB Tarefas]
-    [DB Faltas]
+    [DB Usuários] as db_user
+    [DB Disciplinas] as db_disc
+    [DB Tarefas] as db_task
+    [DB Frequência] as db_freq
 }
 
+' --- Alinhamento Visual
+view_user -[hidden]-> view_disc
+view_disc -[hidden]-> view_task
+view_task -[hidden]-> view_freq
+view_freq -[hidden]-> view_dashboard
+
+control_user -[hidden]-> control_disc
+control_disc -[hidden]-> control_task
+control_task -[hidden]-> control_freq
+control_freq -[hidden]-> control_dashboard
+control_dashboard -[hidden]-> control_email
+
+access_user -[hidden]-> access_disc
+access_disc -[hidden]-> access_task
+access_task -[hidden]-> access_freq
+
+db_user -[hidden]-> db_disc
+db_disc -[hidden]-> db_task
+db_task -[hidden]-> db_freq
+
 ' -- Relações --
+' 1. Usuário -> View
+user ..> view_user : <<utiliza>>
+user ..> view_disc : <<utiliza>>
+user ..> view_task : <<utiliza>>
+user ..> view_freq : <<utiliza>>
+user ..> view_dashboard : <<utiliza>>
 
-' 1. Usuário interage com a interface
-user ..> comp_interface : <<use>>
+' 2. View -> Controller (Ida)
+view_user ..> control_user : ação
+view_disc ..> control_disc : ação
+view_task ..> control_task : ação
+view_freq ..> control_freq : ação
+view_dashboard ..> control_dashboard : ação
 
-' 2. Interface chama os controladores de negócio
-comp_interface ..> comp_user : <<use>>
-comp_interface ..> comp_disc : <<use>>
-comp_interface ..> comp_task : <<use>>
-comp_interface ..> comp_freq : <<use>>
-comp_interface ..> comp_dashboard : <<use>>
+' 3. Controller -> View (Volta)
+control_user ..> view_user : atualiza
+control_disc ..> view_disc : atualiza
+control_task ..> view_task : atualiza
+control_freq ..> view_freq : atualiza
+control_dashboard ..> view_dashboard : atualiza
 
-' 3. Dependências entre Componentes de Negócio
-' Uma tarefa precisa estar vinculada a uma disciplina
-comp_task ..> comp_disc : <<use>>
-' A frequência é registrada dentro de uma disciplina
-comp_freq ..> comp_disc : <<use>>
-
-' 4. Relatório agrega dados
-comp_dashboard ..> comp_disc : <<use>>
-comp_dashboard ..> comp_task : <<use>>
-comp_dashboard ..> comp_freq : <<use>>
+' 4. Dependências entre Controllers
+control_task ..> control_disc : <<utiliza>>
+control_freq ..> control_disc : <<utiliza>>
+control_dashboard ..> control_disc : <<utiliza>>
+control_dashboard ..> control_task : <<utiliza>>
+control_dashboard ..> control_freq : <<utiliza>>
 
 ' 5. Serviços Transversais
-comp_user ..> comp_email : <<use>>
-comp_freq ..> comp_email : <<use>>
+control_user ..> control_email : <<utiliza>>
+control_freq ..> control_email : <<utiliza>>
 
-' 6. Conexão Negócio -> Persistência
-comp_user ..> access_user : <<use>>
-comp_disc ..> access_disc : <<use>>
-comp_task ..> access_task : <<use>>
-comp_freq ..> access_freq : <<use>>
+' 6. Controle -> Model (Ida)
+control_user ..> access_user : <<utiliza>>
+control_disc ..> access_disc : <<utiliza>>
+control_task ..> access_task : <<utiliza>>
+control_freq ..> access_freq : <<utiliza>>
 
-' 7. Conexão Persistência -> Banco de Dados
-access_user ..> [DB Usuários] : <<use>>
-access_disc ..> [DB Disciplinas] : <<use>>
-access_task ..> [DB Tarefas] : <<use>>
-access_freq ..> [DB Faltas] : <<use>>
+' 7. Model -> Controle (Volta)
+access_user ..> control_user : notifica
+access_disc ..> control_disc : notifica
+access_task ..> control_task : notifica
+access_freq ..> control_freq : notifica
+
+' 8. Model -> DB
+access_user ..> db_user : acessa
+access_disc ..> db_disc : acessa
+access_task ..> db_task : acessa
+access_freq ..> db_freq : acessa
+
 @enduml
