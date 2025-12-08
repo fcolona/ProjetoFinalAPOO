@@ -1,7 +1,6 @@
 from datetime import datetime
 from classes import Tipo
 import os
-import time
 
 
 class TarefaView:
@@ -57,9 +56,9 @@ class TarefaView:
             print("\nOperação cancelada.")
             print("Pressione qualquer tecla para retornar...")
             input("")
-    
+
     def renderizar_listar_tarefas(self):
-        """Fluxo de listagem de tarefas. """
+        """Fluxo de listagem de tarefas."""
         self.limpar_tela()
         resposta = self.controller.get_listar_tarefas()
         self.processar_tarefas(resposta)
@@ -67,10 +66,15 @@ class TarefaView:
         input("")
 
     def processar_tarefas(self, resposta):
-        for id_tarefa, tarefa in resposta['body'].items():
-            print(f"{id_tarefa}) {tarefa.titulo} - {tarefa.tipo.value} - {tarefa.data_entrega} - {tarefa.status.value}", end=" ")
-            if tarefa.nota != None: print(f"- {tarefa.nota}")
-            else: print("")
+        for id_tarefa, tarefa in resposta["body"].items():
+            print(
+                f"{id_tarefa}) {tarefa.titulo} - {tarefa.tipo.value} - {tarefa.data_entrega} - {tarefa.status.value}",
+                end=" ",
+            )
+            if tarefa.nota is not None:
+                print(f"- {tarefa.nota}")
+            else:
+                print("")
 
     # Implementação do fluxo visual de "Concluir Tarefa"
     def renderizar_concluir_tarefa(self):
@@ -98,57 +102,47 @@ class TarefaView:
         status = resposta["status"]
         body = resposta["body"]
 
+        self.limpar_tela()
         if status == 200:
             # View <-- Controller : Resposta HTTP: 200 OK
-            self.limpar_tela()
             print("\n--- [Tela] Sucesso ---")
-            print(f"{body}") 
-            print("Pressione qualquer tecla para retornar...")
-            input("")
+            print(f"{body}")
 
         elif status == 201:
-            self.limpar_tela()
             print("\n--- [Tela] Sucesso ---")
             # View <-- Controller : Resposta HTTP: 201 Created
             # O body presente será o objeto Tarefa
             titulo = body.titulo if hasattr(body, "titulo") else "Nova Tarefa"
             tarefa_id = getattr(body, "id", None)
-            print(f"Tarefa '{titulo}' registrada com sucesso!")
-            print("Pressione qualquer tecla para retornar...")
-            input("")
+            print(
+                f"Tarefa '{titulo}' registrada com sucesso!"
+                f"{f' (ID {tarefa_id})' if tarefa_id is not None else ''}"
+            )
 
         elif status == 400:
-            self.limpar_tela()
             print("\n--- [Tela] Erro ---")
             # View <-- Controller : Resposta HTTP: 400 Bad Request
             print(
                 f"Entrada de dados inválida - {body}"
             )  # "Exibir mensagens de validação"
-            print("Pressione qualquer tecla para retornar...")
-            input("")
 
         elif status == 404:
-            self.limpar_tela()
             print("\n--- [Tela] Erro ---")
             # View <-- Controller : Resposta HTTP: 404 Not Found
-            print(
-                f"{body}"
-            )  # "Mensagem: Disciplina/Tarefa não encontrada"
-            print("Pressione qualquer tecla para retornar...")
-            input("")
+            print(f"{body}")  # "Mensagem: Disciplina/Tarefa não encontrada"
 
         elif status == 500:
-            self.limpar_tela()
-            print("\n--- [Tela] Erro de Recurso Não Encontrado ---")
+            print("\n--- [Tela] Erro ---")
             # View <-- Controller : Resposta HTTP: 500 Internal Server Error
             print(f"{body}")  # "Mensagem: Erro interno..."
-            print("Pressione qualquer tecla para retornar...")
-            input("")
 
         else:
             print(f"Status {status}: {body}")
-            print("Pressione qualquer tecla para retornar...")
-            input("")
+
+        # pausa única e limpa antes de voltar ao menu
+        print("Pressione qualquer tecla para retornar...")
+        input("")
+        self.limpar_tela()
 
     # Helpers de entrada robusta
     def _input_int(self, prompt: str) -> int:
