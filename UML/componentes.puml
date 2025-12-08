@@ -1,5 +1,9 @@
 @startuml "Diagrama de Componentes Otimizado - Setas Separadas"
-skinparam ranksep 80
+
+skinparam ranksep 120
+skinparam nodesep 90
+skinparam linetype ortho
+
 left to right direction
 
 actor :Usuário Autenticado: as user
